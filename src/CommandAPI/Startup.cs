@@ -12,12 +12,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using AutoMapper;
+using Newtonsoft.Json.Serialization;
 
 namespace CommandAPI
 {
     public class Startup
     {
-        public IConfiguration Configuration {get;}
+        public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -27,13 +28,19 @@ namespace CommandAPI
         public void ConfigureServices(IServiceCollection services)
         {
             var builder = new NpgsqlConnectionStringBuilder();
-            builder.ConnectionString = 
+            builder.ConnectionString =
                 Configuration.GetConnectionString("PostgreSqlConnection");
             builder.Username = Configuration["UserID"];
             builder.Password = Configuration["Password"];
 
-            services.AddDbContext<CommandContext>(opt => opt.UseNpgsql (builder.ConnectionString));
-            services.AddControllers();
+            services.AddDbContext<CommandContext>(opt => opt.UseNpgsql(builder.ConnectionString));
+            //services.AddControllers();
+
+            services.AddControllers().AddNewtonsoftJson(s =>
+            {
+                s.SerializerSettings.ContractResolver = new
+                CamelCasePropertyNamesContractResolver();
+            });
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
